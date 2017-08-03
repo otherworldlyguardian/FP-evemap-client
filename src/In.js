@@ -16,6 +16,7 @@ class In extends Component {
 
     this.timerL = null
     this.timerS = null
+    this.timerM = null
     this.timerT = null
   }
 
@@ -23,6 +24,7 @@ class In extends Component {
     // ApiConn.initializeClientUpdateInterval()
     this.timerL = setTimeout(this.locationUpdate, 5000)
     this.timerS = setTimeout(this.shipUpdate, 5000)
+    this.timerM = setTimeout(this.persistMap, 300000)
     this.tokenRefresh()
   }
 
@@ -37,7 +39,7 @@ class In extends Component {
     .then(resp => resp.json())
     .then(data => {
       if (data.solar_system_id) {
-        let system = systems.filter(system => system.systemID === data.solar_system_id)[0].systemName
+        let system = systems.find(system => system.systemID === data.solar_system_id).systemName
         if (location !== system && this.props.sysList.every(sys => (sys.name !== location)) && location !== undefined) {
           this.props.addSystem({
             name: location,
@@ -70,7 +72,7 @@ class In extends Component {
     .then(data => {
       if (data.ship_type_id) {
         this.props.updateInfo(Object.assign({}, this.props.charInfo, {
-          ship: items.filter(item => item.TYPEID === data.ship_type_id)[0].TYPENAME
+          ship: items.find(item => item.TYPEID === data.ship_type_id).TYPENAME
         }))
       }
     })
@@ -93,8 +95,31 @@ class In extends Component {
         character_id: data.character_id,
         character_name: data.character_name
       })
+      data.connections.forEach(conn => {
+        this.props.addSystem({
+          name: conn.sys_name,
+          connection: conn.p_sys_name
+        })
+      })
       })
     this.timerT = setTimeout(this.tokenRefresh, 900000)
+  }
+
+  persistMap = () => {
+    fetch('http://localhost:3000/mapupdate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+        'Authorization': localStorage.getItem('eve')
+      },
+      body: JSON.stringify({
+        eve: {
+          sysList: this.props.sysList
+        }
+      })
+    })
+    this.timerM = setTimeout(this.persistMap, 300000)
   }
 
   componentWillUnmount() {

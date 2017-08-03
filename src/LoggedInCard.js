@@ -14,7 +14,12 @@ class LoggedInCard extends Component {
         'Content-Type': 'application/json',
         'accept': 'application/json',
         'Authorization': localStorage.getItem('eve')
-      }
+      },
+      body: JSON.stringify({
+        eve: {
+          sysList: this.props.sysList
+        }
+      })
     })
     localStorage.removeItem('eve')
     this.props.logOut()
@@ -60,7 +65,8 @@ class LoggedInCard extends Component {
 function mapStateToProps(state) {
   return {
     loggedIn: state.loggedIn,
-    charInfo: state.charInfo
+    charInfo: state.charInfo,
+    sysList: state.sysList
   }
 }
 
